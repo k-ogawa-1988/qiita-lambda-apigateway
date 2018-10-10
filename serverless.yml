@@ -1,0 +1,46 @@
+service: qiita-lambda-apigateway
+
+provider:
+  name: aws
+  profile: ${opt:profile, 'default'}
+  stage: prod
+  region: ap-northeast-1
+  runtime: python3.6
+  role: arn:aws:iam::ACCOUNT_ID:role/service-role/YOUR-ROLE-NAME
+  timeout: 30
+  memorySize: 128
+  versionFunctions: false
+
+resources:
+  Resources:
+    ApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:service}-${self:provider.stage}
+
+package:
+  individually: true
+
+custom:
+  prefix: ${self:service}-${self:provider.stage}
+
+functions:
+  lambda_function:
+    name: ${self:custom.prefix}-lambda_function
+    handler: lambda_function.lambda_handler
+    events:
+      - http:
+          integration: lambda-proxy
+          path: hello-world
+          method: GET
+          cors: true
+      - http:
+          integration: lambda-proxy
+          path: hello-world/{id}
+          method: GET
+          cors: true
+      - http:
+          integration: lambda-proxy
+          path: hello-world
+          method: POST
+          cors: true
